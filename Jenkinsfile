@@ -5,7 +5,7 @@ pipeline {
     stage('Checkout SCM') {
       steps {
         // Checkout the source code from Git
-        git 'https://github.com/C0lum/testing.git'
+        git branch:'main', url: 'https://github.com/C0lum/testing.git'
       }
     }
     
