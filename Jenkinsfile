@@ -81,20 +81,20 @@ pipeline {
     }
     post {
         always {
-            script {
-                sh '''
-                docker compose -f jenkins-compose.yml down
-                docker container prune -f
-                '''
-            }
+            // script {
+            //     sh '''
+            //     docker compose -f jenkins-compose.yml down
+            //     docker container prune -f
+            //     '''
+            // }
 
             recordIssues enabledForFailure: true, tool: sonarQube()
         }
-        // If the build has failed, send an email to notify
-        failure {
-            script {
-                emailext body: '$DEFAULT_CONTENT', subject: '$DEFAULT_SUBJECT', to: '2100755@sit.singaporetech.edu.sg'   
-            }
-        }
+        // // If the build has failed, send an email to notify
+        // failure {
+        //     script {
+        //         emailext body: '$DEFAULT_CONTENT', subject: '$DEFAULT_SUBJECT', to: '2100755@sit.singaporetech.edu.sg'   
+        //     }
+        // }
     }
 }
