@@ -52,7 +52,7 @@ pipeline {
                         // At least one container is running but not "Up," send an email
                         emailext subject: "Docker Container Status Issue",
                             body: "One or more Docker containers are not in an 'Up' state. Please investigate. Check console output at '$BUILD_URL' to view the results.",
-                            to: '2100755@sit.singaporetech.edu.sg'
+                            to: '2102440@sit.singaporetech.edu.sg'
                     } else {
                         // Run backend test case if the dockers are all up
 						sh '''
@@ -62,7 +62,18 @@ pipeline {
 						'''
                         emailext subject: "Tests Completed",
                             body: "Tests have been completed. Check console output at '$BUILD_URL' to view the results.",
-                            to: '2100755@sit.singaporetech.edu.sg'
+                            to: '2102440@sit.singaporetech.edu.sg'
+                    }
+                }
+            }
+        }
+
+        stage ('Code Quality Check via SonarQube') {
+            steps {
+                script {
+                    def scannerHome = tool 'SonarQube Scanner';
+                    withSonarQubeEnv('SonarQube') {
+                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=OWASP -Dsonar.sources=."
                     }
                 }
             }
@@ -76,6 +87,8 @@ pipeline {
                 docker container prune -f
                 '''
             }
+
+            recordIssues enabledForFailure: true, tool: sonarQube()
         }
         // If the build has failed, send an email to notify
         failure {
