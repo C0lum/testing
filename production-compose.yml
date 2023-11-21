@@ -1,0 +1,82 @@
+version: "3.4"
+
+networks:
+  production:
+    driver: bridge
+
+services:
+  database:
+    image: mariadb
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: backend_database_prod
+    env_file: ./docker.env
+    restart: always
+    volumes:
+      - ./backend/database:/var/lib/mysql
+    ports:
+      - "3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 1m30s
+      timeout: 5s
+      retries: 10
+      start_period: 5m
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - production
+  periodic-backup:
+    build:
+      context: .
+      dockerfile: ./periodic-backup/Dockerfile
+    container_name: database-backup
+    env_file: ./docker.env
+    environment:
+      MYSQL_CONTAINER_NAME: backend_database_prod
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./backend/database_backup:/var/backups
+    command: crond -f -d 8
+    restart: always
+    networks:
+      - production
+  frontend:
+    container_name: nextjs_frontend_prod
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    read_only: true
+    command: npx next start
+    ports:
+      - "3000"
+    environment:
+      NODE_ENV: production
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - production
+  backend:
+    container_name: django_backend_prod
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    ports:
+      - "8000"
+    volumes:
+      - ./backend/backend/logs:/app/backend/backend/logs
+      - ./backend/mediafiles:/app/backend/mediafiles
+      - ./backend/production_static:/app/backend/production_static
+    env_file: ./docker.env
+    command: python manage.py runserver 0.0.0.0:8000
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - production
+
