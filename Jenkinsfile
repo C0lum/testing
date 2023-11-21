@@ -1,9 +1,9 @@
 pipeline {
     agent any
     //tools {nodejs "NodeJS"}
-    environment {
-        SEMGREP_APP_TOKEN = credentials('SEMGREP_APP_TOKEN')
-    }
+    // environment {
+    //     SEMGREP_APP_TOKEN = credentials('SEMGREP_APP_TOKEN')
+    // }
     stages {
         stage('Test Docker') {
             steps {
